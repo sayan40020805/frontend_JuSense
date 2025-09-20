@@ -122,7 +122,13 @@ const VotePoll = () => {
   }
 
   if (!poll) {
-    return <div className="error-message">Poll not found</div>;
+    return (
+      <div className="error-message">
+        Poll not found.<br />
+        It may have been deleted or does not exist.<br />
+        <a href="/create-poll" className="create-poll-link">Create a new poll</a> or go back to <a href="/polls">your polls</a>.
+      </div>
+    );
   }
 
   // Defensive: ensure poll.options is always an array
@@ -139,7 +145,7 @@ const VotePoll = () => {
           <span>Total Votes: {poll.totalVotes || 0}</span>
           {poll.isPublic && <span className="public-badge">Public Poll</span>}
         </div>
-        {!isOwner && (
+        {isOwner && (
           <div className="voters-section">
             <h4>Voters:</h4>
             {voters.length === 0 ? (
@@ -190,7 +196,7 @@ const VotePoll = () => {
           </div>
         )}
 
-        {!isOwner && (
+        {isOwner && (
           <div className="results-section">
             <h3>Results:</h3>
             {poll.totalVotes === 0 ? (
@@ -231,11 +237,6 @@ const VotePoll = () => {
                 );
               })}
             </div>
-          </div>
-        )}
-        {isOwner && (
-          <div className="owner-message">
-            <h3>As the poll owner, you cannot view votes or voter details.</h3>
           </div>
         )}
       </div>
