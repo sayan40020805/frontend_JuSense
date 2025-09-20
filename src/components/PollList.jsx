@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -32,58 +33,55 @@ const PollList = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  if (loading) {
-    return <div className="loading">Loading polls...</div>;
-  }
+  const [copiedPollId, setCopiedPollId] = useState(null);
 
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
+  const copyToClipboard = async (pollId) => {
+    const shareUrl = `${window.location.origin}/poll/${pollId}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedPollId(pollId);
+      setTimeout(() => setCopiedPollId(null), 1500);
+    } catch (error) {
+      alert('Failed to copy link');
+    }
+  };
 
   return (
     <div className="poll-list-container">
-      <div className="poll-list-header">
-        <h2>My Polls</h2>
-        <Link to="/create-poll" className="create-poll-button">
-          Create New Poll
-        </Link>
-      </div>
-
-      {polls.length === 0 ? (
-        <div className="no-polls">
-          <p>You haven't created any polls yet.</p>
-          <Link to="/create-poll" className="create-poll-button">
-            Create Your First Poll
-          </Link>
-        </div>
+      <h2>Your Polls</h2>
+      {loading ? (
+        <div className="loading">Loading polls...</div>
+      ) : error ? (
+        <div className="error">{error}</div>
+      ) : polls.length === 0 ? (
+        <div className="no-polls">No polls found. Create your first poll!</div>
       ) : (
         <div className="poll-grid">
-          {polls.map((poll) => (
-            <div key={poll._id} className="poll-card">
-              <h3>{poll.question}</h3>
-              <div className="poll-meta">
-                <span>Created: {formatDate(poll.createdAt)}</span>
-                <span>Total Votes: {poll.totalVotes || 0}</span>
-              </div>
-              <div className="poll-actions">
-                <Link to={`/poll/${poll._id}`} className="view-poll-button">
-                  View Poll
-                </Link>
-                <a
-                  href={`${API_CONFIG.FRONTEND_URL}/poll/${poll._id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="share-link"
-                >
-                  Share Link
-                </a>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
+          {polls.map((poll) => {
+            return (
+              <div key={poll._id} className="poll-card">
+                <h3>{poll.question}</h3>
+                <div className="poll-meta">
+                  <span>Created: {formatDate(poll.createdAt)}</span>
+                  <span>Total Votes: {poll.totalVotes || 0}</span>
 
 export default PollList;
+                    <button
+                      onClick={() => copyToClipboard(poll._id)}
+                      className="share-link"
+                      style={{ marginLeft: '8px' }}
+                      title="Copy share link to clipboard"
+                    >
+                      {copiedPollId === poll._id ? '✅ Copied!' : '📋 Share'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  export default PollList;
