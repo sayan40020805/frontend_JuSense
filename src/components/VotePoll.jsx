@@ -16,12 +16,12 @@ const VotePoll = () => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [voting, setVoting] = useState(false);
-  const [voters, setVoters] = useState([]);
+  const [detailedVotes, setDetailedVotes] = useState([]);
 
   useEffect(() => {
     fetchPoll();
     checkIfVoted();
-    fetchVoters();
+    fetchDetailedVotes();
 
     // Connect to WebSocket
     const socket = io(API_CONFIG.SOCKET_URL);
@@ -36,14 +36,20 @@ const VotePoll = () => {
     };
   }, [id, token]);
 
-  const fetchVoters = async () => {
+  const fetchDetailedVotes = async () => {
+    if (!token) return;
+
     try {
       const response = await axios.get(`${API_CONFIG.BASE_URL}/api/votes/${id}/voters`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+        headers: { Authorization: `Bearer ${token}` },
       });
-      setVoters(response.data.voters || []);
+      // For poll owners, we assume the API returns detailed vote information.
+      // e.g., { voters: [{ name: 'John Doe', optionIndex: 0 }, ...] }
+      setDetailedVotes(response.data.voters || []);
     } catch (error) {
-      setVoters([]);
+      // This can happen if the user is not the owner (e.g., 403 Forbidden), which is fine.
+      // We'll just have an empty list, so no detailed view will be shown.
+      setDetailedVotes([]);
     }
   };
 
@@ -91,7 +97,7 @@ const VotePoll = () => {
       votedPolls.push(id);
       localStorage.setItem('votedPolls', JSON.stringify(votedPolls));
 
-      fetchVoters();
+      fetchDetailedVotes();
     } catch (error) {
       if (error.response?.data?.error) {
         setError(error.response.data.error);
@@ -145,20 +151,6 @@ const VotePoll = () => {
           <span>Total Votes: {poll.totalVotes || 0}</span>
           {poll.isPublic && <span className="public-badge">Public Poll</span>}
         </div>
-        {isOwner && (
-          <div className="voters-section">
-            <h4>Voters:</h4>
-            {voters.length === 0 ? (
-              <p>No one has voted yet.</p>
-            ) : (
-              <ul>
-                {voters.map((voter, idx) => (
-                  <li key={idx}>{voter}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
       </div>
 
       <div className="poll-content">
@@ -237,6 +229,35 @@ const VotePoll = () => {
                 );
               })}
             </div>
+
+            {isOwner && (
+              <div className="detailed-voters-section" style={{ marginTop: '30px' }}>
+                <h4>Who Voted for What:</h4>
+                {detailedVotes.length > 0 ? (
+                  pollOptions.map((option, index) => {
+                    const votersForOption = detailedVotes.filter(
+                      vote => vote.optionIndex === index
+                    );
+                    return (
+                      <div key={index} className="option-voter-details" style={{ marginTop: '15px' }}>
+                        <strong>{option.text} ({votersForOption.length} votes)</strong>
+                        {votersForOption.length > 0 ? (
+                          <ul style={{ listStyle: 'disc', marginLeft: '20px' }}>
+                            {votersForOption.map((vote, voteIdx) => (
+                              <li key={voteIdx}>{vote.name}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p style={{ fontStyle: 'italic', marginLeft: '20px', color: '#888' }}>No votes for this option.</p>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p>Voter details are not available or no one has voted yet.</p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
