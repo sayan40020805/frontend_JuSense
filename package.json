@@ -2,6 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
@@ -9,20 +10,16 @@
     "@testing-library/user-event": "^13.5.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-scripts": "5.0.1",
+    "react-router-dom": "^7.9.1",
+    "axios": "^1.12.2",
+    "socket.io-client": "^4.8.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest"
   },
   "browserslist": {
     "production": [
@@ -35,5 +32,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.3",
+    "vite": "^7.1.6",
+    "vitest": "^2.1.8",
+    "@vitest/ui": "^2.1.8"
   }
 }
