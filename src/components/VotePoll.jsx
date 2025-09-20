@@ -16,6 +16,7 @@ const VotePoll = () => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [voting, setVoting] = useState(false);
+  const [voters, setVoters] = useState([]);
 
   useEffect(() => {
     fetchPoll();
@@ -32,7 +33,20 @@ const VotePoll = () => {
     return () => {
       socket.disconnect();
     };
+    fetchVoters();
   }, [id, token]);
+
+  const fetchVoters = async () => {
+    try {
+      const response = await axios.get(`${API_CONFIG.BASE_URL}/api/votes/${id}/voters`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      setVoters(response.data.voters || []);
+    } catch (error) {
+      // Optionally handle error
+      setVoters([]);
+    }
+  };
 
   const fetchPoll = async () => {
     try {
@@ -67,7 +81,8 @@ const VotePoll = () => {
     setVoting(true);
     try {
       const response = await axios.post(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.VOTES.VOTE(id)}`, {
-        optionIndex: selectedOption
+        optionIndex: selectedOption,
+        name: user?.name || user?.username || user?.email || 'Anonymous'
       }, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
@@ -80,6 +95,8 @@ const VotePoll = () => {
       votedPolls.push(id);
       localStorage.setItem('votedPolls', JSON.stringify(votedPolls));
 
+      // Fetch updated voters list
+      fetchVoters();
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to submit vote');
     } finally {
@@ -115,6 +132,18 @@ const VotePoll = () => {
         <div className="poll-meta">
           <span>Total Votes: {poll.totalVotes || 0}</span>
           {poll.isPublic && <span className="public-badge">Public Poll</span>}
+        </div>
+        <div className="voters-section">
+          <h4>Voters:</h4>
+          {voters.length === 0 ? (
+            <p>No one has voted yet.</p>
+          ) : (
+            <ul>
+              {voters.map((voter, idx) => (
+                <li key={idx}>{voter}</li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
