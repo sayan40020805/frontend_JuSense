@@ -21,6 +21,7 @@ const VotePoll = () => {
   useEffect(() => {
     fetchPoll();
     checkIfVoted();
+    fetchVoters();
 
     // Connect to WebSocket
     const socket = io(API_CONFIG.SOCKET_URL);
@@ -33,7 +34,6 @@ const VotePoll = () => {
     return () => {
       socket.disconnect();
     };
-    fetchVoters();
   }, [id, token]);
 
   const fetchVoters = async () => {
@@ -43,7 +43,6 @@ const VotePoll = () => {
       });
       setVoters(response.data.voters || []);
     } catch (error) {
-      // Optionally handle error
       setVoters([]);
     }
   };
@@ -64,8 +63,6 @@ const VotePoll = () => {
     if (!token) return;
 
     try {
-      // This would need to be implemented in the backend
-      // For now, we'll check localStorage
       const votedPolls = JSON.parse(localStorage.getItem('votedPolls') || '[]');
       if (votedPolls.includes(id)) {
         setHasVoted(true);
@@ -90,15 +87,19 @@ const VotePoll = () => {
       setPoll(response.data.poll);
       setHasVoted(true);
 
-      // Store in localStorage to prevent multiple votes
       const votedPolls = JSON.parse(localStorage.getItem('votedPolls') || '[]');
       votedPolls.push(id);
       localStorage.setItem('votedPolls', JSON.stringify(votedPolls));
 
-      // Fetch updated voters list
       fetchVoters();
     } catch (error) {
-      setError(error.response?.data?.error || 'Failed to submit vote');
+      if (error.response?.data?.error) {
+        setError(error.response.data.error);
+      } else if (error.response?.status === 500) {
+        setError('A server error occurred. Please try again later.');
+      } else {
+        setError('Failed to submit vote');
+      }
     } finally {
       setVoting(false);
     }
@@ -106,8 +107,7 @@ const VotePoll = () => {
 
   const getChartData = () => {
     if (!poll) return [];
-
-    return poll.options.map((option, index) => ({
+    return pollOptions.map((option, index) => ({
       name: option.text,
       votes: option.votes || 0
     }));
@@ -125,6 +125,12 @@ const VotePoll = () => {
     return <div className="error-message">Poll not found</div>;
   }
 
+  // Defensive: ensure poll.options is always an array
+  const pollOptions = Array.isArray(poll.options) ? poll.options : [];
+
+  // Determine if the logged-in user is the poll owner
+  const isOwner = user && poll && (user._id === poll.owner || user.id === poll.owner || user.email === poll.ownerEmail);
+
   return (
     <div className="vote-poll-container">
       <div className="poll-header">
@@ -133,18 +139,20 @@ const VotePoll = () => {
           <span>Total Votes: {poll.totalVotes || 0}</span>
           {poll.isPublic && <span className="public-badge">Public Poll</span>}
         </div>
-        <div className="voters-section">
-          <h4>Voters:</h4>
-          {voters.length === 0 ? (
-            <p>No one has voted yet.</p>
-          ) : (
-            <ul>
-              {voters.map((voter, idx) => (
-                <li key={idx}>{voter}</li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {!isOwner && (
+          <div className="voters-section">
+            <h4>Voters:</h4>
+            {voters.length === 0 ? (
+              <p>No one has voted yet.</p>
+            ) : (
+              <ul>
+                {voters.map((voter, idx) => (
+                  <li key={idx}>{voter}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="poll-content">
@@ -152,7 +160,7 @@ const VotePoll = () => {
           <div className="voting-section">
             <h3>Cast your vote:</h3>
             <div className="options-list">
-              {poll.options.map((option, index) => (
+              {pollOptions.map((option, index) => (
                 <div key={index} className="option-item">
                   <label>
                     <input
@@ -182,47 +190,54 @@ const VotePoll = () => {
           </div>
         )}
 
-        <div className="results-section">
-          <h3>Results:</h3>
-          {poll.totalVotes === 0 ? (
-            <p>No votes yet. Be the first to vote!</p>
-          ) : (
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={getChartData()}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="votes" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+        {!isOwner && (
+          <div className="results-section">
+            <h3>Results:</h3>
+            {poll.totalVotes === 0 ? (
+              <p>No votes yet. Be the first to vote!</p>
+            ) : (
+              <div className="chart-container">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={getChartData()}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="votes" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
 
-          <div className="results-list">
-            {poll.options.map((option, index) => {
-              const percentage = poll.totalVotes > 0
-                ? Math.round((option.votes / poll.totalVotes) * 100)
-                : 0;
+            <div className="results-list">
+              {pollOptions.map((option, index) => {
+                const percentage = poll.totalVotes > 0
+                  ? Math.round((option.votes / poll.totalVotes) * 100)
+                  : 0;
 
-              return (
-                <div key={index} className="result-item">
-                  <span className="option-text">{option.text}</span>
-                  <div className="result-bar">
-                    <div
-                      className="result-fill"
-                      style={{ width: `${percentage}%` }}
-                    ></div>
+                return (
+                  <div key={index} className="result-item">
+                    <span className="option-text">{option.text}</span>
+                    <div className="result-bar">
+                      <div
+                        className="result-fill"
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                    <span className="result-stats">
+                      {option.votes} votes ({percentage}%)
+                    </span>
                   </div>
-                  <span className="result-stats">
-                    {option.votes} votes ({percentage}%)
-                  </span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
+        {isOwner && (
+          <div className="owner-message">
+            <h3>As the poll owner, you cannot view votes or voter details.</h3>
+          </div>
+        )}
       </div>
     </div>
   );
