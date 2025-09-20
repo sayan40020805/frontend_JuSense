@@ -73,7 +73,7 @@ const VotePoll = () => {
   };
 
   const handleVote = async () => {
-    if (!selectedOption || hasVoted) return;
+    if (selectedOption === null || hasVoted) return;
 
     setVoting(true);
     try {
