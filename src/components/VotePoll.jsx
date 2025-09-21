@@ -43,12 +43,25 @@ const VotePoll = () => {
       const response = await axios.get(`${API_CONFIG.BASE_URL}/api/votes/${id}/voters`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // For poll owners, we assume the API returns detailed vote information.
-      // e.g., { voters: [{ name: 'John Doe', optionIndex: 0 }, ...] }
-      setDetailedVotes(response.data.voters || []);
+
+      // Handle your backend's response format
+      const voterDetails = response.data.voterDetails || [];
+
+      // Convert to the format expected by the component
+      const voters = [];
+      voterDetails.forEach((detail, detailIndex) => {
+        detail.voters.forEach(voterName => {
+          voters.push({
+            name: voterName,
+            optionIndex: detailIndex
+          });
+        });
+      });
+
+      setDetailedVotes(voters);
     } catch (error) {
-      // This can happen if the user is not the owner (e.g., 403 Forbidden), which is fine.
-      // We'll just have an empty list, so no detailed view will be shown.
+      console.error('Error fetching voter details:', error);
+      // Don't show error to user, just set empty array
       setDetailedVotes([]);
     }
   };

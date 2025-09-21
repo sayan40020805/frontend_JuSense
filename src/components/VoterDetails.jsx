@@ -43,7 +43,22 @@ const VoterDetails = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setVoters(votersResponse.data.voters || []);
+      // Handle your backend's response format
+      const voterDetails = votersResponse.data.voterDetails || [];
+      const totalVotes = votersResponse.data.totalVotes || 0;
+
+      // Convert to the format expected by the component
+      const voters = [];
+      voterDetails.forEach((detail, detailIndex) => {
+        detail.voters.forEach(voterName => {
+          voters.push({
+            name: voterName,
+            optionIndex: detailIndex
+          });
+        });
+      });
+
+      setVoters(voters);
     } catch (error) {
       if (error.response?.status === 403) {
         setError('Access denied. Only poll owners can view voter details.');

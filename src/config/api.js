@@ -25,7 +25,8 @@ const API_CONFIG = {
       GET: (id) => `/api/polls/${id}`
     },
     VOTES: {
-      VOTE: (id) => `/api/votes/${id}/vote`
+      VOTE: (id) => `/api/votes/${id}/vote`,
+      VOTERS: (id) => `/api/votes/${id}/voters`
     },
 
   }
