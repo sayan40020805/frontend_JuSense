@@ -694,6 +694,30 @@ body {
   text-align: right;
 }
 
+.voter-details-header-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.toggle-details-button {
+  background: linear-gradient(135deg, #666666 0%, #555555 100%);
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.toggle-details-button:hover {
+  background: linear-gradient(135deg, #777777 0%, #666666 100%);
+  box-shadow: 0 4px 10px rgba(102, 102, 102, 0.3);
+  transform: translateY(-2px);
+}
+
 /* Voter Details Styles */
 .voter-details-container {
   max-width: 1000px;

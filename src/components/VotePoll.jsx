@@ -17,6 +17,7 @@ const VotePoll = () => {
   const [hasVoted, setHasVoted] = useState(false);
   const [voting, setVoting] = useState(false);
   const [detailedVotes, setDetailedVotes] = useState([]);
+  const [showVoterDetails, setShowVoterDetails] = useState(false);
 
   useEffect(() => {
     fetchPoll();
