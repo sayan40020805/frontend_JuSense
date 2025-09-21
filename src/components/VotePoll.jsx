@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { io } from 'socket.io-client';
@@ -120,19 +120,30 @@ const VotePoll = () => {
   };
 
   if (loading) {
-    return <div className="loading">Loading poll...</div>;
+    return (
+      <div className="loading">
+        <div className="loading-spinner"></div>
+        Loading poll...
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="error-message">{error}</div>;
+    return (
+      <div className="error-message">
+        <h3>Error</h3>
+        <p>{error}</p>
+      </div>
+    );
   }
 
   if (!poll) {
     return (
       <div className="error-message">
-        Poll not found.<br />
-        It may have been deleted or does not exist.<br />
-        <a href="/create-poll" className="create-poll-link">Create a new poll</a> or go back to <a href="/polls">your polls</a>.
+        <h3>Poll Not Found</h3>
+        <p>Poll not found. It may have been deleted or does not exist.</p>
+        <br />
+        <Link to="/create-poll" className="create-poll-link">Create a new poll</Link> or go back to <Link to="/polls">your polls</Link>.
       </div>
     );
   }
@@ -190,7 +201,12 @@ const VotePoll = () => {
 
         {isOwner && (
           <div className="results-section">
-            <h3>Results:</h3>
+            <div className="owner-controls">
+              <h3>Poll Results</h3>
+              <Link to={`/poll/${id}/voters`} className="voter-details-link">
+                👥 View Voter Details
+              </Link>
+            </div>
             {poll.totalVotes === 0 ? (
               <p>No votes yet. Be the first to vote!</p>
             ) : (

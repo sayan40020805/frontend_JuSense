@@ -14,20 +14,21 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="nav-container">
-        <Link to="/polls" className="nav-logo">
+        <Link to="/" className="nav-logo">
           Quick Polls
         </Link>
         <div className="nav-menu">
           {user ? (
             <>
+              <Link to="/" className="nav-link">
+                Home
+              </Link>
               <Link to="/polls" className="nav-link">
                 My Polls
               </Link>
               <Link to="/create-poll" className="nav-link">
                 Create Poll
               </Link>
-
-
               <span className="nav-user">Welcome, {user.name}</span>
               <button onClick={handleLogout} className="nav-button">
                 Logout
@@ -41,7 +42,6 @@ const Navbar = () => {
               <Link to="/signup" className="nav-link">
                 Sign Up
               </Link>
-
             </>
           )}
         </div>

@@ -6,7 +6,8 @@ import Signup from './components/Signup.jsx';
 import PollList from './components/PollList.jsx';
 import CreatePoll from './components/CreatePoll.jsx';
 import VotePoll from './components/VotePoll.jsx';
-
+import VoterDetails from './components/VoterDetails.jsx';
+import Home from './components/Home.jsx';
 import Navbar from './components/Navbar.jsx';
 import './App.css';
 
@@ -23,7 +24,8 @@ function App() {
               <Route path="/polls" element={<PollList />} />
               <Route path="/create-poll" element={<CreatePoll />} />
               <Route path="/poll/:id" element={<VotePoll />} />
-              <Route path="/" element={<Navigate to="/polls" replace />} />
+              <Route path="/poll/:id/voters" element={<VoterDetails />} />
+              <Route path="/" element={<Home />} />
             </Routes>
           </main>
         </div>
